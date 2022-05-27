@@ -1,0 +1,63 @@
+Egy könyvtárból kiindulva fellistázni rekurzívan a tartalmazott forrásokat
+a. qdir tudja-e az összes tartalmazott fájt?
+b. qdir tud-e fájlszűrőt? a .cs ok, de a .Designer.cs, stb... nem.
+tipikusan csak az általunk írt osztály magyarítandó, a rendszer által adott nem.
+a forrásfájlokat meg kell nyitni és kinyerni a literális stringeket, ahol releváns adat
+a. a feltalálás helye
+b. a konstans értéke, azaz maga a szöveg
+c. adni kell neki wordcodeot
+
+A programban (esetünkben mestercipő) a fordítás kulcs-érték párral működik, akol a kulcs elsősorban egy enum, az érték a default nyelven a default fordítás (esetünkben az angol)
+ public enum tre
+#pragma warning restore IDE1006 // Naming Styles
+  {
+    DEFAULT,
+    COMMON_ERROR, OK, test1,
+...
+
+public static class TranslationService
+  {
+
+    public static string CurrentCulture { get; private set; }
+    public const string DefaultLanguage = "en-US";
+    private const string DefaultLanguageName = "English(US)";
+
+
+    //public const string ERROR = nameof(ERROR);
+
+    private static Dictionary<tre, string> defaultmap = new Dictionary<tre, string>()
+    {
+      {tre.COMMON_ERROR, "error"},
+      {tre.OK, "ok"},
+      {tre.test1, "test1"},
+      {tre.COMMON_ABOUT, "About"},
+      {tre.COMMON_NEW, "New"},
+      {tre.COMMON_EDIT, "Edit"},
+      {tre.COMMON_COMMENTS, "Comments"},
+      {tre.COMMON_NAME, "Name"}, // Name:
+      {tre.COMMON_USERNAME, "Username"},
+      {tre.COMMON_USER, "User"},
+      {tre.COMMON_ID, "Id"},
+      {tre.COMMON_PASSWD, "Password"},
+...
+
+A fordítás úgy történik, hogy az user kiválaszt egy nyelvet és az betöltődik a default merllé. Fordításkor ha a fájlok tartalmazzák a kulcshoz tartozó értéket, akkor az, ha nem, akkor a default szöveg kerül ki.
+
+
+3. A találatok alapján el lehet készíteni a Message fájlokat a kívánt nyelveken.
+a. kézzel meg kell csinálni és le kell fordítani.
+b. ha a találat magyarul van, akkor azt a magyarba és az angolba is bele kell tenni. lefordítani akkor kell, hanem a saját nyelvébe tesszük bele.
+c. ha egy szöveget a googleval lefordítva sajátmagát kapjuk vissza, akkor az eleve azon a nyelven van
+4. A találatok alapján és az enum alapján ki kell találni, mely wordcodeokkal kell az enumot bővíteni, illetve a default dictionaryt bővíteni
+5. A találatok alapján az eredeti forrásban a literális stringet ki kell cserélni egy olyan szintaxisra, aminek hatására a fordítás jön vissza
+        a. tr(tre.BODYPOINTLISTITEM_ORIGINALBODYPOINTDETECTIONSIZE) - itt látszik, hogy nem magát a wordcodeot, hanem az enumot használjuk erre a célra - a program a fordítást
+
+Ha mindent jól csináltunk, örülünk, Vincent.
+
+meg kell adni az sln fájlt bemenetnek
+sln:
+Project.*\"(.*.csproj)\"
+proj:
+<Compile\s+Include.*\"([^.]*\.cs)\"
+
+az sln fájlt tartalmazó könyvtár neve +"_ford" lesz az output könyvtár neve
