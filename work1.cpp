@@ -75,6 +75,7 @@ int Work1::doWork()
     QStringList sourceFinal;
     QStringList destFinal;
 
+    // teszt 1
     QStringList exc;/*{
         "InsoleNames.cs",
         "InsoleWCodes.cs",
