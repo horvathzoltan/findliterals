@@ -117,7 +117,7 @@ int Work1::doWork()
         "AnchorHelper.cs", "Benchmark"
     };*/
 
-    QStringList exc2;/*{
+    QStringList excByText;/*{
             "System",
             "MasterMoveAnalyse",
             "oIq97mc_mEi68wzXxDxFLg",
@@ -143,6 +143,9 @@ int Work1::doWork()
 
         };*/
 
+    QStringList excByPrefix;
+    QStringList excByPostfix;
+
     QDir slnParentDir(slnparent);
 
     auto excludefilepath = slnParentDir.filePath("exclude_file.csv"); // filenév szintű kizárás
@@ -150,6 +153,7 @@ int Work1::doWork()
     auto a  = com::helper::TextFileHelper::loadLines(excludefilepath);
     for(auto&i:a){
         if(i.isEmpty()) continue;
+        if(i.startsWith('#')) continue;
         exc.append(i);
     }
 
@@ -160,12 +164,23 @@ int Work1::doWork()
 
     a = com::helper::TextFileHelper::loadLines(excludefilepath2);
 
-    for(auto&i:a){
+    for(auto&i:a){        
         if(i.isEmpty()) continue;
-        exc2.append(i);
+        if(i.startsWith('#')) continue;
+        if(i.startsWith("pref")){
+            int l = i.length()-4;
+            QString a = i.right(l).toLower();
+            excByPrefix.append(a);
+        }
+        else if(i.startsWith("post")){
+            int l = i.length()-4;
+            QString a = i.right(l).toLower();
+            excByPostfix.append(a);
+        }
+        else excByText.append(i.toLower());
     }
 
-    zInfo("excludefilepath_txt: "+excludefilepath2+ " ("+QString::number(exc2.count())+")");
+    zInfo("excludefilepath_txt: "+excludefilepath2+ " ("+QString::number(excByText.count())+")");
 
 
     foreach(auto proj, projla){
@@ -187,19 +202,19 @@ int Work1::doWork()
 
     copyDir(sourceFinal, destFinal);
 
-    QList<Exclusion> classes = getSpecial(destFinal, CLASSSTR);
-    QList<Exclusion> annotations = getSpecial(destFinal, ANNOTATION);
-    QList<Exclusion> iacs1 = getSpecial(destFinal, IACS2);
-    QList<Exclusion> iacs2 = getSpecial(destFinal, IACS1);
-    QList<Exclusion> disp1 = getSpecial(destFinal, DISP1);
-    QList<Exclusion> disp2 = getSpecial(destFinal, DISP2);
-    QList<Exclusion> debugws = getSpecial(destFinal, DEBUGW);
-    QList<Exclusion> sqlps = getSpecial(destFinal, SQLPARAM);
-    QList<Exclusion> fieldnames = getSpecial(destFinal, FIELDNAME);
-    QList<Exclusion> regions = getSpecial(destFinal, REGION);
-    QList<Exclusion> dprop = getSpecial(destFinal, DPROP);
-    QList<Exclusion> rcom = getSpecial(destFinal, RCOM);
-    QList<Exclusion> lser = getSpecial(destFinal, LSER);
+//    QList<Exclusion> classes = getSpecial(destFinal, CLASSSTR);
+//    QList<Exclusion> annotations = getSpecial(destFinal, ANNOTATION);
+//    QList<Exclusion> iacs1 = getSpecial(destFinal, IACS2);
+//    QList<Exclusion> iacs2 = getSpecial(destFinal, IACS1);
+//    QList<Exclusion> disp1 = getSpecial(destFinal, DISP1);
+//    QList<Exclusion> disp2 = getSpecial(destFinal, DISP2);
+//    QList<Exclusion> debugws = getSpecial(destFinal, DEBUGW);
+//    QList<Exclusion> sqlps = getSpecial(destFinal, SQLPARAM);
+//    QList<Exclusion> fieldnames = getSpecial(destFinal, FIELDNAME);
+//    QList<Exclusion> regions = getSpecial(destFinal, REGION);
+//    QList<Exclusion> dprop = getSpecial(destFinal, DPROP);
+//    QList<Exclusion> rcom = getSpecial(destFinal, RCOM);
+//    QList<Exclusion> lser = getSpecial(destFinal, LSER);
 
 
     QList<Exclusion> wcodes = getSpecial2(destFinal, "TranslationService.cs", ENUM);
@@ -213,34 +228,37 @@ int Work1::doWork()
 
     auto literalStrings = getLiterals(destFinal, COMORSTR, data1path);
 
-    filterStrings(&literalStrings, FILTER1);
-    filterStrings(&literalStrings, FILTER2);
-    filterStrings(&literalStrings, FILTER3);
-    filterStrings(&literalStrings, FILTER4);
-    filterStrings(&literalStrings, FILTER5);
-    filterStrings(&literalStrings, FILTER6);
-    filterStrings(&literalStrings, FILTER7);
-    filterStrings(&literalStrings, FILTER9);
-    filterStrings(&literalStrings, DEBUGS);
-    filterStrings(&literalStrings, SQLSTR);
+//    filterStrings(&literalStrings, FILTER1);
+//    filterStrings(&literalStrings, FILTER2);
+//    filterStrings(&literalStrings, FILTER3);
+//    filterStrings(&literalStrings, FILTER4);
+//    filterStrings(&literalStrings, FILTER5);
+//    filterStrings(&literalStrings, FILTER6);
+//    filterStrings(&literalStrings, FILTER7);
+//    filterStrings(&literalStrings, FILTER9);
+//    filterStrings(&literalStrings, DEBUGS);
+//    filterStrings(&literalStrings, SQLSTR);
 
-    assertLiterals(&literalStrings, classes, FILTER8);
+//    assertLiterals(&literalStrings, classes, FILTER8);
 
-    assertLiterals2(&literalStrings, wcodes);
-    assertLiterals2(&literalStrings, iacs1);
-    assertLiterals2(&literalStrings, iacs2);
-    assertLiterals2(&literalStrings, disp1);
-    assertLiterals2(&literalStrings, disp2);
-    assertLiterals2(&literalStrings, annotations);
-    assertLiterals2(&literalStrings, debugws);
-    assertLiterals2(&literalStrings, sqlps);
-    assertLiterals2(&literalStrings, fieldnames);
-    assertLiterals2(&literalStrings, regions);
-    assertLiterals2(&literalStrings, dprop);
-    assertLiterals2(&literalStrings, rcom);
-    assertLiterals2(&literalStrings, lser);
+//    assertLiterals2(&literalStrings, wcodes);
+//    assertLiterals2(&literalStrings, iacs1);
+//    assertLiterals2(&literalStrings, iacs2);
+//    assertLiterals2(&literalStrings, disp1);
+//    assertLiterals2(&literalStrings, disp2);
+//    assertLiterals2(&literalStrings, annotations);
+//    assertLiterals2(&literalStrings, debugws);
+//    assertLiterals2(&literalStrings, sqlps);
+//    assertLiterals2(&literalStrings, fieldnames);
+//    assertLiterals2(&literalStrings, regions);
+//    assertLiterals2(&literalStrings, dprop);
+//    assertLiterals2(&literalStrings, rcom);
+//    assertLiterals2(&literalStrings, lser);
 
-    assertLiterals3(&literalStrings, exc2);
+    assertLiterals3(&literalStrings, excByText, AssertMode::ByLetter);
+    assertLiterals3(&literalStrings, excByText, AssertMode::ByValue);
+    assertLiterals3(&literalStrings, excByPrefix, AssertMode::ByPrefix);
+    assertLiterals3(&literalStrings, excByPostfix, AssertMode::ByPostfix);
 
     addWCodes(&literalStrings);
 
@@ -436,22 +454,49 @@ void Work1::assertLiterals2(QList<Literal> *list, QList<Exclusion> set)
     }
 }
 
-void Work1::assertLiterals3(QList<Literal> *list, QStringList exc)
+void Work1::assertLiterals3(QList<Literal> *list, QStringList exc, AssertMode mode)
 {
     zforeach(l, *list){
-        foreach(auto s, exc){
+        QString txt;
+        switch(mode){
+        case AssertMode::ByLetter:
+        case AssertMode::ByValue: txt = l->value.toLower(); break;
+        case AssertMode::ByPrefix: txt = l->pref.toLower(); break;
+        case AssertMode::ByPostfix: txt = l->postf.toLower(); break;
+        default: txt = "";
+        }
+        if(mode == AssertMode::ByLetter){
+            int i;
+            for (i=0;i<txt.size();i++){
+                if(txt[i].isLetter()) break;
+            }
+            if(i==txt.size()) l->relevant=false;
+        } else{
+
+            foreach(auto s, exc){
+
+//            if(mode == AssertMode::ByPrefix && l->value.startsWith("kelencntr@gmail."))
+//            {
+//                zInfo("exc");
+//            }
             if(s.endsWith('*'))
             {
                 if(s.startsWith('*'))
                 {
-                    if(l->value.contains(s.mid(1,s.length()-2))) l->relevant = false;
+                    if(txt.contains(s.mid(1,s.length()-2))) l->relevant = false;
                 }
                 else
                 {
-                    if(l->value.startsWith(s.left(s.length()-1))) l->relevant = false;
+                    if(txt.startsWith(s.left(s.length()-1))) l->relevant = false;
                 }
+            } else if(s.startsWith('*'))
+            {
+                QString token = s.mid(1 ,s.length()-1);
+                if(txt.endsWith(token))
+                    l->relevant=false;
             }
-            else if(l->value == s) l->relevant = false;
+            else if(txt == s) l->relevant = false;
+            }
         }
     }
 }
@@ -465,20 +510,56 @@ QList<Literal> Work1::getLiterals(QStringList dest, const QString regexp, const 
     QRegularExpression reg(regexp);
     foreach(auto d, dest){
         QString fileText(com::helper::FileHelper::load(d));
+        int maxIx = fileText.length()-1;
         output<<d<<" tartalma:"<<Qt::endl;
         QRegularExpressionMatchIterator i = reg.globalMatch(fileText);
         //int count = 1;
         while(i.hasNext()){
             Literal l;
             QRegularExpressionMatch match = i.next();
-            if(match.hasMatch() && match.captured(2).length() > 3){
+            if(match.hasMatch()){
+                if(match.captured(2).length() <= 1) continue;
                 l.value = match.captured(2);
                 l.fileName = d;
                 l.index = match.capturedStart(2);
                 l.length = match.capturedLength(2);
                 l.relevant = true;
+
+//                if(l.value=="Mastergait"){
+////                if(l.value.startsWith("CreateCameraGetPictureTask")){
+//                    zInfo("value:"+l.value);
+//                }
+
+                int lix1 = l.index; //end
+
+                int lix2 = l.index-20;
+                if(lix2<=0) lix2=0;
+                int len = lix1-lix2;
+
+
+                l.pref = fileText.mid(lix2, len);
+
+                lix2 = l.pref.lastIndexOf('\n');
+                if(lix2!=-1) l.pref = l.pref.mid(lix2,l.pref.length()-lix2);
+
+                lix1 = l.index+l.length;//start
+                lix2 = fileText.indexOf('\n');//lix1+20;//end
+                if(lix2==-1) lix2=lix1+20;
+                if(lix2>maxIx) lix2=maxIx;
+                len = lix2-lix1;
+
+                l.postf = fileText.mid(lix1,len);
+
+                lix2 = l.postf.indexOf('\n');
+                if(lix2!=-1) l.postf = l.postf.mid(0,lix2);
+
                 output<<l.value<<Qt::endl;
                 out<<l;
+//                if(l.value=="Mastergait"){
+////                if(l.value.startsWith("CreateCameraGetPictureTask")){
+//                    zInfo("value:"+l.value);
+//                }
+                //CreateCameraGetPictureTask
             }
         }
     }

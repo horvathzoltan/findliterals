@@ -21,6 +21,8 @@ struct Literal{
     int length;
     QString value;
     QString wordCode;
+    QString pref;
+    QString postf;
     bool relevant;
 };
 
@@ -38,6 +40,7 @@ public:
     static int doWork();
     static Work1Params params;
 private:
+
     static const QString SLN;
     static const QString CSPROJ;
     //static const QString STRLIT;
@@ -82,7 +85,8 @@ private:
     static QList<Exclusion> getSpecial2(QStringList source, QString filename, const QString regexp);
     static void assertLiterals(QList<Literal> *list, QList<Exclusion> set, const QString regexp);
     static void assertLiterals2(QList<Literal> *list, QList<Exclusion> set);
-    static void assertLiterals3(QList<Literal> *list, QStringList exc);
+    enum AssertMode{ ByValue, ByPrefix, ByPostfix, ByLetter };
+    static void assertLiterals3(QList<Literal> *list, QStringList exc, AssertMode mode);
     static QStringList removeFiles(QStringList list, QStringList exc);
     static int generateCsv(const QList<Literal>&, const QString& filename);
     static void addWCodes(QList<Literal> *list);
