@@ -61,3 +61,88 @@ proj:
 <Compile\s+Include.*\"([^.]*\.cs)\"
 
 az sln fájlt tartalmazó könyvtár neve +"_ford" lesz az output könyvtár neve
+
+
+****************************************
+
+console2
+
+sln file as input"// parancssori argumentumként -i=inputfile.valami-ként kell megadni
+csv file as output"));
+set if backup is needed"));
+
+sln->proj fileok-> filelisták
+
+filelista fájljainak átmásolása a ..._ford mappába
+
+started
+params: /home/zoli/forditas/tök/MasterMoveAnalyse_2/MasterMoveAnalyse.sln
+Fájl sikeresen átmásolva: /home/zoli/forditas/tök/MasterMoveAnalyse_2/MasterMoveAnalyse/Helpers/CameraResolutionsHelper.cs -> /home/zoli/forditas/tök/MasterMoveAnalyse_2_ford/MasterMoveAnalyse/Helpers/CameraResolutionsHelper.cs
+Fájl sikeresen átmásolva: /home/zoli/forditas/tök/MasterMoveAnalyse_2/MasterMoveAnalyse/Helpers/ChartHelper.cs -> /home/zoli/forditas/tök/MasterMoveAnalyse_2_ford/MasterMoveAnalyse/Helpers/ChartHelper.cs
+Fájl sikeresen átmásolva: /home/zoli/forditas/tök/MasterMoveAnalyse_2/MasterMoveAnalyse/Helpers/SortableBindingList.cs -> /home/zoli/forditas/tök/MasterMoveAnalyse_2_ford/MasterMoveAnalyse/Helpers/SortableBindingList.cs
+Fájl sikeresen átmásolva: /home/zoli/forditas/tök/MasterMoveAnalyse_2/MasterMoveAnalyse/MServices/MovementPlayerService/ProgressState.cs -> /home/zoli/forditas/tök/MasterMoveAnalyse_2_ford/MasterMoveAnalyse/MServices/MovementPlayerService/ProgressState.cs
+Fájl sikeresen átmásolva: /home/zoli/forditas/tök/MasterMoveAnalyse_2/MasterMoveAnalyse/Forms/ToolStripWithClickThrough.cs -> /home/zoli/forditas/tök/MasterMoveAnalyse_2_ford/MasterMoveAnalyse/Forms/ToolStripWithClickThrough.cs
+Fájl sikeresen átmásolva: /home/zoli/forditas/tök/MasterMoveAnalyse_2/MasterMoveAnalyse/Forms/BaseForm.cs -> /home/zoli/forditas/tök/MasterMoveAnalyse_2_ford/MasterMoveAnalyse/Forms/BaseForm.cs
+
+
+
+
+#filename	index	length	value	wordcode
+/home/zoli/forditas/tök/MasterMoveAnalyse_ford/MasterMoveAnalyse/Helpers/ChartHelper.cs	4933	19	LeftFoot_Sensor_{0}	CHART1
+/home/zoli/forditas/tök/MasterMoveAnalyse_ford/MasterMoveAnalyse/Helpers/ChartHelper.cs	7321	16	Right_Sensor_{0}	CHART2
+/home/zoli/forditas/tök/MasterMoveAnalyse_ford/MasterMoveAnalyse/Forms/Functions/GDPRForm.cs	213	8	GDPRForm	GDPRF1
+/home/zoli/forditas/tök/MasterMoveAnalyse_ford/MasterMoveAnalyse/Forms/Functions/InsolesForm.cs	1093	11	InsolesForm	INSOL1
+/home/zoli/forditas/tök/MasterMoveAnalyse_ford/MasterMoveAnalyse/Forms/Functions/LogForm.cs	503	7	LogForm	LOGFO1
+/home/zoli/forditas/tök/MasterMoveAnalyse_ford/MasterMoveAnalyse/Forms/Functions/MeasurementTypesForm.cs	783	15	MeasurementType	MEASU1
+/home/zoli/forditas/tök/MasterMoveAnalyse_ford/MasterMoveAnalyse/Forms/Functions/MovementPlayerForm.cs	1132	17	MovementDetection	MOVEM1
+/home/zoli/forditas/tök/MasterMoveAnalyse_ford/MasterMoveAnalyse/Forms/Functions/PatiensEditorForm.cs	611	18	PatientsEditorForm	PATIE1
+/home/zoli/forditas/tök/MasterMoveAnalyse_ford/MasterMoveAnalyse/Forms/Functions/PatiensEditorForm.cs	7606	11	new_patient	PATIE2
+
+
+-i /home/zoli/forditas/tök/MasterMoveAnalyse_2/MasterMoveAnalyse.sln -o outfile.csv
+-i /home/zoli/forditas/tök/MasterGait/MasterMove/MasterMove.Program/MasterMove.Program.csproj -o outfile.csv
+
+
+public string FrameButtonTooltip
+{
+    get
+    {
+        FrameButtonTooltip_ = GlobalTranslation.Translate("WC_UI_UWP_Pages.CalibrationItemControl.FrameButtonTooltip");
+        switch (RectangleStatus)
+        {
+            case RectangleStatusEnum.Undefined:
+                FrameButtonTooltip_ += $"\n{GlobalTranslation.Translate("WC_UI_UWP_Pages.{CalibrationItemControl}.RectangleStatusEnum_Current")}{GlobalTranslation.Translate("WC_UI_UWP_Pages.CalibrationItemControl.RectangleStatusEnum_Undefined")}"/*nowc*/;
+                break;
+            case RectangleStatusEnum.Processing:
+                FrameButtonTooltip_ += $"\n{GlobalTranslation.Translate("WC_UI_UWP_Pages.CalibrationItemControl.RectangleStatusEnum_Current")}{GlobalTranslation.Translate("WC_UI_UWP_Pages.CalibrationItemControl.RectangleStatusEnum_Processing")}"/*nowc*/;"makmak"
+                break;
+            case RectangleStatusEnum.Defined:
+                FrameButtonTooltip_ += $"\n{GlobalTranslation.Translate("WC_UI_UWP_Pages.CalibrationItemControl.RectangleStatusEnum_Current")}{GlobalTranslation.Translate("WC_UI_UWP_Pages.CalibrationItemControl.RectangleStatusEnum_Defined")}";/*nowc*/
+                break;
+        }
+        return FrameButtonTooltip_;
+    }
+    set
+    {
+
+    }
+}
+
+
+private static string CreateToString<T>(List<PropertyInfo> properties, T instance) where T : class
+     {
+         var type = typeof(T);
+         if (instance == null)
+         {
+             return type.Name;
+         }
+
+         StringBuilder strB = new StringBuilder();
+         strB.Append($"{type.Name}: ");
+         properties.ForEach(p =>
+         {
+             var value = p.GetValue(instance);
+             strB.Append($"{p.Name}: {(value == null ? "null" : value.ToString())} --- ");
+         });
+         return strB.ToString().TrimEnd('-', ' ');
+     }

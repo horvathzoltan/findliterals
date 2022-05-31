@@ -21,7 +21,7 @@ QTextStream& qStdOut()
     static QTextStream ts( stdout );
     return ts;
 }
-
+//("([^"]|"").*")
 const QString Work1::SLN = R"(Project.*\"(.*.csproj)\")";
 const QString Work1::CSPROJ = R"(<Compile\s+Include\s*=\s*\"([^.]*\.cs)\")";
 const QString Work1::COMORSTR = R"((\"([^"\\]*(?:\\.[^"\\]*)*)\"|\@\"((?:[^\"]|(?:\"\"))*)\")|([\s]*(?:\/\*([\s\S]*?)\*\/|\/\/(.*))))";
@@ -166,7 +166,7 @@ int Work1::doWork()
 
     for(auto&i:a){        
         if(i.isEmpty()) continue;
-        if(i.startsWith('#')) continue;
+        if(i.startsWith('#')) continue;        
         if(i.startsWith("pref")){
             int l = i.length()-4;
             QString a = i.right(l).toLower();
@@ -177,6 +177,7 @@ int Work1::doWork()
             QString a = i.right(l).toLower();
             excByPostfix.append(a);
         }
+        else if(i.startsWith("\\#")) excByText.append(i.mid(1).toLower());
         else excByText.append(i.toLower());
     }
 
