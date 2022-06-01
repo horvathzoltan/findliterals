@@ -79,6 +79,7 @@ private:
     static void copyDir(QStringList source, QStringList dest);
     static QString getProjFolderName(QString proja);
     static QList<Literal> getLiterals(QStringList dest, const QString regexp, const QString& filename);
+    static QList<Literal> getLiterals(const QString inFileName, const QRegularExpression reg, QTextStream* output);
     //static void killComments(QStringList files);
     static void filterStrings(QList<Literal> *list, const QString regexp);
     static QList<Exclusion> getSpecial(QStringList source, const QString regexp);

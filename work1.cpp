@@ -155,14 +155,14 @@ int Work1::doWork()
     copyDir(sourceFinal, destFinal);
 
 
-    QList<Exclusion> wcodes = getSpecial2(destFinal, "TranslationService.cs", ENUM);
+    //QList<Exclusion> wcodes = getSpecial2(destFinal, "TranslationService.cs", ENUM);
 
     QDir destDir(slnparent);//destpathname
     auto data1path = destDir.filePath("literals.csv"); // literalis stringek - összes
     auto data2path = destDir.filePath("literals2.csv"); // szűrt
 
-    zInfo("data1path: "+data1path);
-    zInfo("data2path: "+data2path);
+    zInfo("data1path: "+data1path); // az összes string
+    zInfo("data2path: "+data2path); // a filterezett string
 
     auto literalStrings = getLiterals(destFinal, COMORSTR, data1path);
 
@@ -196,7 +196,7 @@ int Work1::doWork()
 
     data2.close();
 
-    auto csvFileName = destDir.filePath(params.outFile); // szűrt
+    auto csvFileName = destDir.filePath(params.outFile); // a végeredmény
 
     int csvLineCount = generateCsv(literalStrings, csvFileName);
 
@@ -413,68 +413,66 @@ void Work1::assertLiterals3(QList<Literal> *list, QStringList exc, AssertMode mo
 }
 
 //A getFileList, a killComments és ez kb ugyan azt csinálja, lehetne közös függvény
-QList<Literal> Work1::getLiterals(QStringList dest, const QString regexp, const QString& filename){
-    QFile data(filename);
+QList<Literal> Work1::getLiterals(QStringList inFileNames, const QString regexp, const QString& outFileName){
+    QFile data(outFileName);
     data.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream output(&data);
     QList<Literal> out;
     QRegularExpression reg(regexp);
-    foreach(auto d, dest){
-        QString fileText(com::helper::FileHelper::load(d));
-        int maxIx = fileText.length()-1;
-        output<<d<<" tartalma:"<<Qt::endl;
-        QRegularExpressionMatchIterator i = reg.globalMatch(fileText);
-        //int count = 1;
-        while(i.hasNext()){
-            Literal l;
-            QRegularExpressionMatch match = i.next();
-            if(match.hasMatch()){
-                if(match.captured(2).length() <= 1) continue;
-                l.value = match.captured(2);
-                l.fileName = d;
-                l.index = match.capturedStart(2);
-                l.length = match.capturedLength(2);
-                l.relevant = true;
-
-//                if(l.value=="Mastergait"){
-////                if(l.value.startsWith("CreateCameraGetPictureTask")){
-//                    zInfo("value:"+l.value);
-//                }
-
-                int lix1 = l.index; //end
-
-                int lix2 = l.index-20;
-                if(lix2<=0) lix2=0;
-                int len = lix1-lix2;
-
-
-                l.pref = fileText.mid(lix2, len);
-
-                lix2 = l.pref.lastIndexOf('\n');
-                if(lix2!=-1) l.pref = l.pref.mid(lix2,l.pref.length()-lix2);
-
-                lix1 = l.index+l.length;//start
-                lix2 = fileText.indexOf('\n');//lix1+20;//end
-                if(lix2==-1) lix2=lix1+20;
-                if(lix2>maxIx) lix2=maxIx;
-                len = lix2-lix1;
-
-                l.postf = fileText.mid(lix1,len);
-
-                lix2 = l.postf.indexOf('\n');
-                if(lix2!=-1) l.postf = l.postf.mid(0,lix2);
-
-                output<<l.value<<Qt::endl;
-                out<<l;
-//                if(l.value=="Mastergait"){
-////                if(l.value.startsWith("CreateCameraGetPictureTask")){
-//                    zInfo("value:"+l.value);
-//                }
-                //CreateCameraGetPictureTask
-            }
-        }
+    foreach(auto d, inFileNames){
+        auto l = getLiterals(d, reg, &output);
+        out<<l;
     }
     data.close();
+    return out;
+}
+
+QList<Literal> Work1::getLiterals(const QString inFileName, const QRegularExpression reg, QTextStream* output){
+    QList<Literal> out;
+
+    QString fileText(com::helper::FileHelper::load(inFileName));
+    int maxIx = fileText.length()-1;
+    *output<<inFileName<<" tartalma:"<<Qt::endl;
+    QRegularExpressionMatchIterator i = reg.globalMatch(fileText);
+    //int count = 1;
+    while(i.hasNext()){
+        Literal l;
+        QRegularExpressionMatch match = i.next();
+        if(match.hasMatch()){
+            if(match.captured(2).length() <= 1) continue;
+            l.value = match.captured(2);
+            l.fileName = inFileName;
+            l.index = match.capturedStart(2);
+            l.length = match.capturedLength(2);
+            l.relevant = true;
+
+            int lix1 = l.index; //end
+
+            int lix2 = l.index-20;
+            if(lix2<=0) lix2=0;
+            int len = lix1-lix2;
+
+
+            l.pref = fileText.mid(lix2, len);
+
+            lix2 = l.pref.lastIndexOf('\n');
+            if(lix2!=-1) l.pref = l.pref.mid(lix2,l.pref.length()-lix2);
+
+            lix1 = l.index+l.length;//start
+            lix2 = fileText.indexOf('\n');//lix1+20;//end
+            if(lix2==-1) lix2=lix1+20;
+            if(lix2>maxIx) lix2=maxIx;
+            len = lix2-lix1;
+
+            l.postf = fileText.mid(lix1,len);
+
+            lix2 = l.postf.indexOf('\n');
+            if(lix2!=-1) l.postf = l.postf.mid(0,lix2);
+
+            *output<<l.value<<Qt::endl;
+            out<<l;
+        }
+    }
     return out;
 }
 
