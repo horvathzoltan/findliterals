@@ -69,80 +69,14 @@ int Work1::doWork()
     }
 
     auto slnparent = getParentDirName(params.inFile);
-    auto projla = appendString(projFileNames, slnparent);
     auto destpathname = slnparent+"_ford";
 
     QStringList sourceFinal;
     QStringList destFinal;
 
     // teszt 1
-    QStringList exc;/*{
-        "InsoleNames.cs",
-        "InsoleWCodes.cs",
-        "DrawerService.cs",
-        "FriendlyColors2.cs",
-        "LogService.cs",
-        "CSVImportHelper.cs",
-        "HelpService.cs",
-        "TranslationService.cs",
-        "HeatColorizer.cs",
-        "RegistryManager.cs",
-        "RPIZeroConnectionConfiguration.cs",
-        "LiteralFinder.cs",
-        "SQLHelper.cs",
-        "ChangeFromIntToDecimalInBodyPointDetectionProperties.cs",
-        "MeasurementProjectInsoleMeasurementNeededPropertyAdded.cs",
-        "InsoleIndicatorValuesChanged.cs",
-        "MotherNameGoesToCommentInPatientModel.cs",
-        "ConcreteUsedMeasurableBodyPointModelGetPropertiesFromMeasurableBodyPointModel.cs",
-        "MeasurableBodyPointsObjectDetectionAreaPropertiesAdded.cs",
-        "MeasurementProjectsReportDateTimeNullable.cs",
-        "MeasurementProjectsReportAdded.cs",
-        "MeasurementResultBodyAngleVectorsCalculatedAngleNullable.cs",
-        "MeasurementResultFrameFKAdded.cs",
-        "MeasurementResultStreamBytesRemoved.cs",
-        "MeasurementResultStreamBytesAdded.cs",
-        "MeasurementResultBodyAngleVectorshaveTwoAdditionalPropertyForTimeCode.cs",
-        "InitialMigration.cs",
-        "PreferredFpsPropertyAddedToMeasurementProjectModel.cs",
-        "footprint.cs",
-        "Configuration.cs",
-        "_TEST",
-        "AssemblyInfo.cs",
-        "CamelCaseString.cs",
-        "ExceptionExtensions.cs",
-        "SystemSpecHelper.cs",
-        "BodyPointGridItem.cs", "AppConfigurationService.cs", "AssemblyInfoHelper.cs","Migrations",
-        "MeasurementWizardForm", "Entities", "EntityFrameworkDataReader.cs", "SensorValueListHelper.cs",
-        "AnchorHelper.cs", "Benchmark"
-    };*/
-
-    QStringList excByText;/*{
-            "System",
-            "MasterMoveAnalyse",
-            "oIq97mc_mEi68wzXxDxFLg",
-            "q4kYxXN2iUSSEjGDWNxNLQ",
-            "Arial",
-            "Tahoma",
-            "ISO-8859-2",
-            "en-US",
-            "Admin",
-            "System.String[]",
-            "System.UInt16[]",
-            " (*.csv)|*.csv|",
-            "{wdata.Patient.MedicalNumber}_{wdata.Footer.Timestamp.ToString(",
-            "{m.Name} ({m.UserName})", "RIGHT_", "\\\\Report", "Win32_ComputerSystemProduct",
-            "UUID", "UNEXPECTED", "eu-ES", "045e_0810", "046d_086b", "{0} {1}\\n{1}", "MasterMoveAnalyseTestDBConnectionString",
-            "{body_point_.ObjectDetectionSize_MinWidth} px - {body_point_.ObjectDetectionSize_MaxWidth} px",
-            "0 px - 0 px",
-            "{CalibratedDetectionSize_MinWidth} px - {CalibratedDetectionSize_MaxWidth} px",
-            "image/jpeg",
-            "- Frame added to Queue {0}. FinalFramesForVideo count: {1} -", "//{displayDescription}", "{displayName}:{prop.GetValue(this, null).ToString()}",
-            "{opname}:{opid}",
-            "ThreadLogger.cs"
-
-        };*/
-
+    QStringList exc;
+    QStringList excByText;
     QStringList excByPrefix;
     QStringList excByPostfix;
 
@@ -183,39 +117,42 @@ int Work1::doWork()
 
     zInfo("excludefilepath_txt: "+excludefilepath2+ " ("+QString::number(excByText.count())+")");
 
+    if(params.inFile.endsWith(".cs"))
+    {
+        QFileInfo fi(params.inFile);
+        auto csprojparent = getParentDirName(params.inFile);
+        auto pfn = getProjFolderName(params.inFile);
 
-    foreach(auto proj, projla){
-        auto cslr = getFileList(proj, CSPROJ);
-
-        auto cslr2 = removeFiles(cslr, exc);
-
-        auto csprojparent = getParentDirName(proj);
-
-        auto pfn = getProjFolderName(proj);
-
-        auto source = appendString(cslr2, csprojparent);
-        auto dest_ = appendString(cslr2, pfn);
-        auto dest = appendString(dest_, destpathname);
+        auto cslr2 = fi.fileName();
+        auto source = append9(csprojparent,cslr2);
+        auto dest_ = append9(pfn, cslr2);
+        auto dest = append9(destpathname, dest_);
 
         sourceFinal<<source;
         destFinal<<dest;
     }
+    else
+    {
+        auto projFilePath = appendString(projFileNames, slnparent);
+        foreach(auto proj, projFilePath){
+            auto cslr = getFileList(proj, CSPROJ);
+
+            auto cslr2 = removeFiles(cslr, exc);
+
+            auto csprojparent = getParentDirName(proj);
+
+            auto pfn = getProjFolderName(proj);
+
+            auto source = appendString(cslr2, csprojparent);
+            auto dest_ = appendString(cslr2, pfn);
+            auto dest = appendString(dest_, destpathname);
+
+            sourceFinal<<source;
+            destFinal<<dest;
+        }
+    }
 
     copyDir(sourceFinal, destFinal);
-
-//    QList<Exclusion> classes = getSpecial(destFinal, CLASSSTR);
-//    QList<Exclusion> annotations = getSpecial(destFinal, ANNOTATION);
-//    QList<Exclusion> iacs1 = getSpecial(destFinal, IACS2);
-//    QList<Exclusion> iacs2 = getSpecial(destFinal, IACS1);
-//    QList<Exclusion> disp1 = getSpecial(destFinal, DISP1);
-//    QList<Exclusion> disp2 = getSpecial(destFinal, DISP2);
-//    QList<Exclusion> debugws = getSpecial(destFinal, DEBUGW);
-//    QList<Exclusion> sqlps = getSpecial(destFinal, SQLPARAM);
-//    QList<Exclusion> fieldnames = getSpecial(destFinal, FIELDNAME);
-//    QList<Exclusion> regions = getSpecial(destFinal, REGION);
-//    QList<Exclusion> dprop = getSpecial(destFinal, DPROP);
-//    QList<Exclusion> rcom = getSpecial(destFinal, RCOM);
-//    QList<Exclusion> lser = getSpecial(destFinal, LSER);
 
 
     QList<Exclusion> wcodes = getSpecial2(destFinal, "TranslationService.cs", ENUM);
@@ -228,33 +165,6 @@ int Work1::doWork()
     zInfo("data2path: "+data2path);
 
     auto literalStrings = getLiterals(destFinal, COMORSTR, data1path);
-
-//    filterStrings(&literalStrings, FILTER1);
-//    filterStrings(&literalStrings, FILTER2);
-//    filterStrings(&literalStrings, FILTER3);
-//    filterStrings(&literalStrings, FILTER4);
-//    filterStrings(&literalStrings, FILTER5);
-//    filterStrings(&literalStrings, FILTER6);
-//    filterStrings(&literalStrings, FILTER7);
-//    filterStrings(&literalStrings, FILTER9);
-//    filterStrings(&literalStrings, DEBUGS);
-//    filterStrings(&literalStrings, SQLSTR);
-
-//    assertLiterals(&literalStrings, classes, FILTER8);
-
-//    assertLiterals2(&literalStrings, wcodes);
-//    assertLiterals2(&literalStrings, iacs1);
-//    assertLiterals2(&literalStrings, iacs2);
-//    assertLiterals2(&literalStrings, disp1);
-//    assertLiterals2(&literalStrings, disp2);
-//    assertLiterals2(&literalStrings, annotations);
-//    assertLiterals2(&literalStrings, debugws);
-//    assertLiterals2(&literalStrings, sqlps);
-//    assertLiterals2(&literalStrings, fieldnames);
-//    assertLiterals2(&literalStrings, regions);
-//    assertLiterals2(&literalStrings, dprop);
-//    assertLiterals2(&literalStrings, rcom);
-//    assertLiterals2(&literalStrings, lser);
 
     assertLiterals3(&literalStrings, excByText, AssertMode::ByLetter);
     assertLiterals3(&literalStrings, excByText, AssertMode::ByValue);

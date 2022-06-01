@@ -97,6 +97,7 @@ HEADERS += \
 #    signalhelper.h
 
 DISTFILES += \
+    proba.cs \
     todo
 
 message(includepath = $$INCLUDEPATH)
