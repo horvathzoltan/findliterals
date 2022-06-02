@@ -592,7 +592,11 @@ QList<Literal> Work1::getLiterals2(const QStringList& inFileNames){
 QList<Literal> Work1::getLiterals2(const QString& inFileName){
     QString txt(com::helper::FileHelper::load(inFileName));
     auto literals = getLiterals3(txt);
-    for(auto&l:literals) l.fileName = inFileName;
+    for(auto&l:literals)
+    {
+        l.fileName = inFileName;
+    }
+
     return literals;
 }
 
