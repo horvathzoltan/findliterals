@@ -59,5 +59,7 @@ private static void test2()
                       "fefefefe");
     Console.WriteLine(@"Hello World ddff
                        fefefefe");
+    Console.WriteLine($"Hello World{$"eee"+hu}");
+
 
 }

@@ -192,13 +192,14 @@ void Work1::LiteralsToFile(const QList<Literal> &literals, const QString &fileNa
     QString prev("");
     int n = 0;
 
-    foreach(auto s, literals){
+    for(auto& s:literals)
+    {
         if(s.relevant){
             if(s.fileName!=prev){
                 output<<"##############################"<<s.fileName<<"##############################"<<Qt::endl;
                 prev = s.fileName;
             }
-            output<<s.value<<Qt::endl;
+            output<<'\"'+s.value+'\"'<<Qt::endl;
             n++;
         }
     }
@@ -589,16 +590,21 @@ QList<Literal> Work1::getLiterals2(const QStringList& inFileNames){
 }
 
 QList<Literal> Work1::getLiterals2(const QString& inFileName){
+    QString txt(com::helper::FileHelper::load(inFileName));
+    auto literals = getLiterals3(txt);
+    for(auto&l:literals) l.fileName = inFileName;
+    return literals;
+}
+
+QList<Literal> Work1::getLiterals3(const QString& txt){
     QList<Literal> out;
 
-    QString txt(com::helper::FileHelper::load(inFileName));
     int ix1=0;
     int maxIx = txt.length()-1;
 
-    int comments = 0;
     bool end = false;
     do
-    {        
+    {
         ix1 = txt.indexOf('"', ix1);
         if(ix1==-1) break;
 
@@ -625,20 +631,29 @@ QList<Literal> Work1::getLiterals2(const QString& inFileName){
                     continue;
                 }
             }
-//            else
-//            {
-                l.fileName = inFileName;
-                QString pref= getPrefix(txt, l, 20);
-                l.pref = pref;
-                QString postf= getPostfix(txt, l, 20);
-                l.postf = postf;
 
-                out<<l;
-                if(l.indexEnd>0)
-                    ix1=l.indexEnd+1;
-                else
-                    ix1++;
-  //          }
+
+            QString pref= getPrefix(txt, l, 20);
+            l.pref = pref;
+            QString postf= getPostfix(txt, l, 20);
+            l.postf = postf;
+
+            out<<l;
+            if(l.indexEnd>0)
+                ix1=l.indexEnd+1;
+            else
+                ix1++;
+
+            if(l.type==Literal::Type::interpolated)
+            {
+                for(auto&e:l.embeddings){
+                    //auto el = getInterpolatedString(e, 0);
+                    auto el = getLiterals3(e);
+                    out<<el;
+                }
+
+            }
+
         }
         else
         {
@@ -686,20 +701,22 @@ Literal Work1::getNormalString(const QString &txt, int ix1){
 }
 
 Literal Work1::getRawString(const QString &txt, int ix1){
-    return {};
-}
-
-Literal Work1::getInterpolatedString(const QString &txt, int ix1){    
     ix1++;
     int ix2=-1;
 
-    int embeddings = 0;
     for(int i=ix1;i<txt.length();i++){
-        if(txt[i]=='\\') {i++; continue;}
-        if(txt[i]=='{') embeddings++;
-        if(txt[i]=='}') embeddings--;
-        if(embeddings==0){
-            if(txt[i]=='"') {ix2 = i; break;}
+        if(txt[i]=='\"')
+        {
+            if(txt[i+1]=='\"')
+            {
+                i+=2;
+                continue;
+            }
+            else
+            {
+                ix2 = i;
+                break;
+            }
         }
     }
 
@@ -711,10 +728,64 @@ Literal Work1::getInterpolatedString(const QString &txt, int ix1){
     l.indexEnd = ix2;
     l.length = ix2-ix1;
     l.relevant = true;
-    l.type = Literal::Type::normal;
+    l.type = Literal::Type::raw;
 
     return l;
 }
+
+Literal Work1::getInterpolatedString(const QString &txt, int ix1){    
+    ix1++;
+    int ix2=-1;
+    Literal l;
+    QVector<int> embeddingStartIxs;
+    int embeddings = 0;
+    for(int i=ix1;i<txt.length();i++){
+        if(txt[i]=='\\')
+        {
+            i++;
+            continue;
+        }
+        if(txt[i]=='{')
+        {
+            embeddings++;
+            embeddingStartIxs<<i+1;
+            continue;
+        }
+        if(txt[i]=='}')
+        {
+            embeddings--;
+            if(embeddings==0)
+            {
+                int ex1 = embeddingStartIxs.first();//last();
+                embeddingStartIxs.clear();//.removeLast();
+                auto e = txt.mid(ex1, i-ex1);
+                l.embeddings<<e;
+            }
+            continue;
+        }
+        if(embeddings==0)
+        {
+            if(txt[i]=='"')
+            {
+                ix2 = i;
+                break;
+            }
+        }
+    }
+
+    if(ix2==-1) return {};
+
+
+    l.value = txt.mid(ix1, ix2-ix1);
+    l.index = ix1;
+    l.indexEnd = ix2;
+    l.length = ix2-ix1;
+    l.relevant = true;
+    l.type = Literal::Type::interpolated;
+
+    return l;
+}
+
 
 QString Work1::getPrefix(const QString &txt, const Literal &l, int plen)
 {

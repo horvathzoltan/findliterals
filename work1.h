@@ -27,6 +27,7 @@ struct Literal{
     QString pref;
     QString postf;    
     bool relevant;
+    QStringList embeddings;
     Type type;
 
     bool isValid(){return !value.isEmpty();}
@@ -100,6 +101,7 @@ private:
     static void LiteralsToFile(const QList<Literal>& literals, const QString& fileName);
     static QList<Literal> getLiterals2(const QStringList& inFileNames);
     static QList<Literal> getLiterals2(const QString& inFileName);
+    static QList<Literal> getLiterals3(const QString& txt);
     static Literal getLiteral2(const QString& txt, int ix);
 
     static Literal getNormalString(const QString& txt, int ix);
