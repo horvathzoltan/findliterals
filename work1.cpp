@@ -608,16 +608,14 @@ QList<Literal> Work1::getLiterals3(const QString& txt){
         ix1 = txt.indexOf('"', ix1);
         if(ix1==-1) break;
 
-
         Literal l = getLiteral2(txt, ix1);
-        // ha kommentben van?
 
         if(l.isValid())
         {
-            if(l.value=="7")
-            {
-                zInfo("upsz");
-            }
+//            if(l.value=="7")
+//            {
+//                zInfo("upsz");
+//            }
             int ix5 = txt.lastIndexOf("//", l.index);
             if(ix5!=-1) {
                 ix1++; continue;
@@ -647,11 +645,9 @@ QList<Literal> Work1::getLiterals3(const QString& txt){
             if(l.type==Literal::Type::interpolated)
             {
                 for(auto&e:l.embeddings){
-                    //auto el = getInterpolatedString(e, 0);
                     auto el = getLiterals3(e);
                     out<<el;
                 }
-
             }
 
         }
