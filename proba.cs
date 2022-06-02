@@ -51,7 +51,13 @@ Hello World "\
 private static void test2()
 {
     int t4=7;
+    int t5=8;
     Console.WriteLine($"Hello World {t4} \\");
-    Console.WriteLine($"Hello World \"{t4}\" \\");
+    Console.WriteLine($"Hello World \"{t5}\" \\");
     Console.WriteLine(@"Hello World ""\");
+    Console.WriteLine("Hello World ddff"+
+                      "fefefefe");
+    Console.WriteLine(@"Hello World ddff
+                       fefefefe");
+
 }

@@ -592,57 +592,65 @@ QList<Literal> Work1::getLiterals2(const QString& inFileName){
     QList<Literal> out;
 
     QString txt(com::helper::FileHelper::load(inFileName));
+    int ix1=0;
     int maxIx = txt.length()-1;
 
-    for(int i=0;i<txt.length();i++){
-        int ix1 = txt.indexOf('"');
+    int comments = 0;
+    bool end = false;
+    do
+    {        
+        ix1 = txt.indexOf('"', ix1);
         if(ix1==-1) break;
 
-        QString l = getLiteral2(txt, ix1);
-    }
-    //int count = 1;
-    /*while(i.hasNext()){
-        Literal l;
-        QRegularExpressionMatch match = i.next();
-        if(match.hasMatch()){
-            if(match.captured(2).length() <= 1) continue;
-            l.value = match.captured(2);
-            l.fileName = inFileName;
-            l.index = match.capturedStart(2);
-            l.length = match.capturedLength(2);
-            l.relevant = true;
 
-            int lix1 = l.index; //end
+        Literal l = getLiteral2(txt, ix1);
+        // ha kommentben van?
 
-            int lix2 = l.index-20;
-            if(lix2<=0) lix2=0;
-            int len = lix1-lix2;
+        if(l.isValid())
+        {
+            if(l.value=="7")
+            {
+                zInfo("upsz");
+            }
+            int ix5 = txt.lastIndexOf("//", l.index);
+            if(ix5!=-1) {
+                ix1++; continue;
+            }
+            int ix6 = txt.lastIndexOf("/*", l.index);
+            if(ix6!=-1){
+                int ix7 = txt.lastIndexOf("*/", l.index);
+                if((ix7==-1)||(ix7<ix6))
+                {
+                    ix1++;
+                    continue;
+                }
+            }
+//            else
+//            {
+                l.fileName = inFileName;
+                QString pref= getPrefix(txt, l, 20);
+                l.pref = pref;
+                QString postf= getPostfix(txt, l, 20);
+                l.postf = postf;
 
-
-            l.pref = fileText.mid(lix2, len);
-
-            lix2 = l.pref.lastIndexOf('\n');
-            if(lix2!=-1) l.pref = l.pref.mid(lix2,l.pref.length()-lix2);
-
-            lix1 = l.index+l.length;//start
-            lix2 = fileText.indexOf('\n');//lix1+20;//end
-            if(lix2==-1) lix2=lix1+20;
-            if(lix2>maxIx) lix2=maxIx;
-            len = lix2-lix1;
-
-            l.postf = fileText.mid(lix1,len);
-
-            lix2 = l.postf.indexOf('\n');
-            if(lix2!=-1) l.postf = l.postf.mid(0,lix2);
-
-            *output<<l.value<<Qt::endl;
-            out<<l;
+                out<<l;
+                if(l.indexEnd>0)
+                    ix1=l.indexEnd+1;
+                else
+                    ix1++;
+  //          }
         }
-    }*/
+        else
+        {
+            ix1++;
+        }
+        end = ix1>=maxIx;
+    }while(!end);
+
     return out;
 }
 
-QString Work1::getLiteral2(const QString &txt, int ix1)
+Literal Work1::getLiteral2(const QString &txt, int ix1)
 {
     int preIx = ix1-1;
     if(preIx>=0){
@@ -652,23 +660,87 @@ QString Work1::getLiteral2(const QString &txt, int ix1)
     return getNormalString(txt,ix1);
 }
 
-QString Work1::getNormalString(const QString &txt, int ix1){
-    int ix2=ix1+1;
+Literal Work1::getNormalString(const QString &txt, int ix1){
+    ix1++;
+    int ix2=ix1;
     bool end=false;
     do{
         ix2 = txt.indexOf('"', ix2);
         if(ix2==-1) break;
-        if(txt[ix2]=='\\') ix2++;
+        int preIx=ix2-1;
+        auto pre = txt[preIx];
+        if(pre=='\\') ix2++;
         else end = true;
     }while(!end);
+    if(ix2==-1) return {};
 
-    return txt.mid(ix1, ix2-ix1);
+    Literal l;
+    l.value = txt.mid(ix1, ix2-ix1);
+    l.index = ix1;
+    l.indexEnd = ix2;
+    l.length = ix2-ix1;
+    l.relevant = true;
+    l.type = Literal::Type::normal;
+
+    return l;
 }
 
-QString Work1::getRawString(const QString &txt, int ix1){
+Literal Work1::getRawString(const QString &txt, int ix1){
     return {};
 }
 
-QString Work1::getInterpolatedString(const QString &txt, int ix1){
-    return {};
+Literal Work1::getInterpolatedString(const QString &txt, int ix1){    
+    ix1++;
+    int ix2=-1;
+
+    int embeddings = 0;
+    for(int i=ix1;i<txt.length();i++){
+        if(txt[i]=='\\') {i++; continue;}
+        if(txt[i]=='{') embeddings++;
+        if(txt[i]=='}') embeddings--;
+        if(embeddings==0){
+            if(txt[i]=='"') {ix2 = i; break;}
+        }
+    }
+
+    if(ix2==-1) return {};
+
+    Literal l;
+    l.value = txt.mid(ix1, ix2-ix1);
+    l.index = ix1;
+    l.indexEnd = ix2;
+    l.length = ix2-ix1;
+    l.relevant = true;
+    l.type = Literal::Type::normal;
+
+    return l;
+}
+
+QString Work1::getPrefix(const QString &txt, const Literal &l, int plen)
+{
+    int lix2 = l.index-plen;
+    if(lix2<=0) lix2=0;
+    int len = l.index-lix2;
+
+    auto pref =  txt.mid(lix2, len);
+    lix2 = pref.lastIndexOf('\n');
+    if(lix2!=-1) pref = pref.mid(lix2,pref.length()-lix2);
+
+    return pref;
+}
+QString Work1::getPostfix(const QString &txt, const Literal &l, int plen)
+{
+    int maxIx = txt.length()-1;
+
+    int lix1 = l.indexEnd;//index+l.length;//start
+    int lix2 = txt.indexOf('\n');//lix1+20;//end
+    if(lix2==-1) lix2=lix1+plen;
+    if(lix2>maxIx) lix2=maxIx;
+    int len = lix2-lix1;
+
+    auto postf = txt.mid(lix1,len);
+    lix2 = postf.indexOf('\n');
+    if(lix2!=-1) postf = postf.mid(0,lix2);
+
+    return postf;
 }

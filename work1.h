@@ -16,14 +16,20 @@ public:
 };
 
 struct Literal{
+    enum Type {normal, raw, interpolated};
+
     QString fileName;
-    int index;
+    int index=-1;
+    int indexEnd=-1;
     int length;
     QString value;
     QString wordCode;
     QString pref;
-    QString postf;
+    QString postf;    
     bool relevant;
+    Type type;
+
+    bool isValid(){return !value.isEmpty();}
 };
 
 struct Exclusion{
@@ -41,7 +47,6 @@ public:
     static Work1Params params;
 private:
 
-    enum LiteralType {normal, raw, interpolated};
     static const QString SLN;
     static const QString CSPROJ;
     //static const QString STRLIT;
@@ -95,12 +100,15 @@ private:
     static void LiteralsToFile(const QList<Literal>& literals, const QString& fileName);
     static QList<Literal> getLiterals2(const QStringList& inFileNames);
     static QList<Literal> getLiterals2(const QString& inFileName);
-    static QString getLiteral2(const QString& txt, int ix);
+    static Literal getLiteral2(const QString& txt, int ix);
 
-    static QString getNormalString(const QString& txt, int ix);
-    static QString getRawString(const QString& txt, int ix);
-    static QString getInterpolatedString(const QString& txt, int ix);
+    static Literal getNormalString(const QString& txt, int ix);
+    static Literal getRawString(const QString& txt, int ix);
+    static Literal getInterpolatedString(const QString& txt, int ix);
 
+    static QString getPrefix(const QString& txt, const Literal& l, int plen);
+    static QString getPostfix(const QString& txt, const Literal& l, int plen);
 };
+
 
 #endif // WORK1_H
