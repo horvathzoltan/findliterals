@@ -29,6 +29,7 @@ struct Literal{
     bool relevant;
     QStringList embeddings;
     Type type;
+    bool concatenate = false;
 
     bool isValid(){return !value.isEmpty();}
 };

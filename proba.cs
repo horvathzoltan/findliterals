@@ -48,6 +48,8 @@ Hello World 7 \
 Hello World "7" \
 Hello World "\
 */
+
+// "huhu"
 private static void test2()
 {
     int t4=7;
@@ -56,7 +58,12 @@ private static void test2()
     Console.WriteLine($"Hello World \"{t5}\" \\");
     Console.WriteLine(@"Hello World ""\");
     Console.WriteLine("Hello World ddff"+
-                      "fefefefe");
+                      "1fefefefeí");
+    Console.WriteLine("Hello World ddff"  +
+                              "2fefefefe");
+    Console.WriteLine("Hello World ddff"  +"3fefefefe");
+    Console.WriteLine("Hello World ddff"  +"4fefefefe");
+
     Console.WriteLine(@"Hello World ddff
                        fefefefe");
     Console.WriteLine($"Hello World{$"eee"+hu}");

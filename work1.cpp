@@ -199,7 +199,7 @@ void Work1::LiteralsToFile(const QList<Literal> &literals, const QString &fileNa
                 output<<"##############################"<<s.fileName<<"##############################"<<Qt::endl;
                 prev = s.fileName;
             }
-            output<<'\"'+s.value+'\"'<<Qt::endl;
+            output<<QString(s.concatenate?"+":"")+'\"'+s.value+'\"'<<Qt::endl;
             n++;
         }
     }
@@ -599,64 +599,97 @@ QList<Literal> Work1::getLiterals2(const QString& inFileName){
 QList<Literal> Work1::getLiterals3(const QString& txt){
     QList<Literal> out;
 
-    int ix1=0;
-    int maxIx = txt.length()-1;
-
-    bool end = false;
-    do
+    bool concatenate = false;
+    int whitespaces = 0;
+    int letters = 0;
+    bool comment1 = false;
+    bool comment2 = false;
+    for(int i=0;i<txt.length();i++)
     {
-        ix1 = txt.indexOf('"', ix1);
-        if(ix1==-1) break;
-
-        Literal l = getLiteral2(txt, ix1);
-
-        if(l.isValid())
-        {
-//            if(l.value=="7")
-//            {
-//                zInfo("upsz");
-//            }
-            int ix5 = txt.lastIndexOf("//", l.index);
-            if(ix5!=-1) {
-                ix1++; continue;
-            }
-            int ix6 = txt.lastIndexOf("/*", l.index);
-            if(ix6!=-1){
-                int ix7 = txt.lastIndexOf("*/", l.index);
-                if((ix7==-1)||(ix7<ix6))
-                {
-                    ix1++;
-                    continue;
-                }
-            }
-
-
-            QString pref= getPrefix(txt, l, 20);
-            l.pref = pref;
-            QString postf= getPostfix(txt, l, 20);
-            l.postf = postf;
-
-            out<<l;
-            if(l.indexEnd>0)
-                ix1=l.indexEnd+1;
-            else
-                ix1++;
-
-            if(l.type==Literal::Type::interpolated)
+//        if(txt[i]=='+'){
+//            zInfo("upsz");
+//        }
+        if(txt[i]!='"'){
+            if(txt[i].isSpace() || txt[i].isNonCharacter())
             {
-                for(auto&e:l.embeddings){
-                    auto el = getLiterals3(e);
-                    out<<el;
-                }
+                letters=0;
+                whitespaces++;
+            }
+            else
+            {
+                whitespaces=0;
+                letters++;
+                if(concatenate)
+                    concatenate = false;
             }
 
+            if(txt[i]=="+"){
+                if(letters==1)
+                    concatenate = true;
+                continue;
+            }
+            else if(txt[i]=="/"){
+                if(txt[i+1]=="/"){
+                    if(!comment2)
+                    {
+                        comment1 = true;
+                        i+=2;
+                    }
+                }
+                else if(txt[i+1]=="*"){
+                    if(!comment2){
+                        comment2 = true;
+                        i+=2;
+                    }
+                }
+                continue;
+            }
+            else if(txt[i]=='\n')
+            {
+                if(comment1) comment1 = false;
+                continue;
+            }
+            else if(txt[i]=="*")
+            {
+                if(txt[i+1]=='/')
+                {
+                    if(comment2) comment2 = false;
+                }
+                continue;
+            }
+            continue;
         }
-        else
+        letters = 0;
+        whitespaces = 0;
+        /*eljutottunk a lényegig*/
+        if(!comment1&&!comment2)
         {
-            ix1++;
+            Literal l = getLiteral2(txt, i);
+            if(l.isValid())
+            {
+                l.concatenate = concatenate;
+
+                QString pref= getPrefix(txt, l, 20);
+                l.pref = pref;
+                QString postf= getPostfix(txt, l, 20);
+                l.postf = postf;
+
+                out<<l;
+                if(l.indexEnd>0) i=l.indexEnd;
+
+                if(l.type==Literal::Type::interpolated)
+                {
+                    for(auto&e:l.embeddings)
+                    {
+                        auto el = getLiterals3(e);
+                        out<<el;
+                    }
+                }
+                if(l.indexEnd>0) i = l.indexEnd;
+            }
         }
-        end = ix1>=maxIx;
-    }while(!end);
+        //whitespaces = 0;
+    }
 
     return out;
 }
@@ -674,15 +707,23 @@ Literal Work1::getLiteral2(const QString &txt, int ix1)
 Literal Work1::getNormalString(const QString &txt, int ix1){
     ix1++;
     int ix2=ix1;
-    bool end=false;
-    do{
-        ix2 = txt.indexOf('"', ix2);
-        if(ix2==-1) break;
-        int preIx=ix2-1;
-        auto pre = txt[preIx];
-        if(pre=='\\') ix2++;
-        else end = true;
-    }while(!end);
+
+    for(int i=ix1;i<txt.length();i++){
+        if(txt[i]=='\"')
+        {
+            if(txt[i+1]=='\"')
+            {
+                i+=2;
+                continue;
+            }
+            else
+            {
+                ix2 = i;
+                break;
+            }
+        }
+    }
+
     if(ix2==-1) return {};
 
     Literal l;
@@ -703,6 +744,11 @@ Literal Work1::getRawString(const QString &txt, int ix1){
     for(int i=ix1;i<txt.length();i++){
         if(txt[i]=='\"')
         {
+            if(txt[i]=='\\')
+            {
+                i++;
+                continue;
+            }
             if(txt[i+1]=='\"')
             {
                 i+=2;
