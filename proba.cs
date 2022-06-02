@@ -42,3 +42,16 @@ private static string CreateToString<T>(List<PropertyInfo> properties, T instanc
          });
          return strB.ToString().TrimEnd('-', ' ');
      }
+
+/*
+Hello World 7 \
+Hello World "7" \
+Hello World "\
+*/
+private static void test2()
+{
+    int t4=7;
+    Console.WriteLine($"Hello World {t4} \\");
+    Console.WriteLine($"Hello World \"{t4}\" \\");
+    Console.WriteLine(@"Hello World ""\");
+}

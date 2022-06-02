@@ -41,6 +41,7 @@ public:
     static Work1Params params;
 private:
 
+    enum LiteralType {normal, raw, interpolated};
     static const QString SLN;
     static const QString CSPROJ;
     //static const QString STRLIT;
@@ -91,6 +92,15 @@ private:
     static QStringList removeFiles(QStringList list, QStringList exc);
     static int generateCsv(const QList<Literal>&, const QString& filename);
     static void addWCodes(QList<Literal> *list);
+    static void LiteralsToFile(const QList<Literal>& literals, const QString& fileName);
+    static QList<Literal> getLiterals2(const QStringList& inFileNames);
+    static QList<Literal> getLiterals2(const QString& inFileName);
+    static QString getLiteral2(const QString& txt, int ix);
+
+    static QString getNormalString(const QString& txt, int ix);
+    static QString getRawString(const QString& txt, int ix);
+    static QString getInterpolatedString(const QString& txt, int ix);
+
 };
 
 #endif // WORK1_H

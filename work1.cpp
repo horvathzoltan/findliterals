@@ -154,17 +154,14 @@ int Work1::doWork()
 
     copyDir(sourceFinal, destFinal);
 
-
-    //QList<Exclusion> wcodes = getSpecial2(destFinal, "TranslationService.cs", ENUM);
-
     QDir destDir(slnparent);//destpathname
-    auto data1path = destDir.filePath("literals.csv"); // literalis stringek - összes
-    auto data2path = destDir.filePath("literals2.csv"); // szűrt
 
-    zInfo("data1path: "+data1path); // az összes string
-    zInfo("data2path: "+data2path); // a filterezett string
+    //auto literalStrings = getLiterals(destFinal, COMORSTR, data1path);
+    auto literalStrings = getLiterals2(destFinal);
 
-    auto literalStrings = getLiterals(destFinal, COMORSTR, data1path);
+    auto data1path = destDir.filePath("literals1.csv"); // az eredeti
+    zInfo("data1path: "+data1path+ " ("+QString::number(data1path.length())+")");
+    LiteralsToFile(literalStrings, data1path);
 
     assertLiterals3(&literalStrings, excByText, AssertMode::ByLetter);
     assertLiterals3(&literalStrings, excByText, AssertMode::ByValue);
@@ -173,38 +170,42 @@ int Work1::doWork()
 
     addWCodes(&literalStrings);
 
+    auto data2path = destDir.filePath("literals2.csv"); // a szűrt
+    zInfo("data2path: "+data2path+ " ("+QString::number(data2path.length())+")");
+    LiteralsToFile(literalStrings, data2path);
 
-    QFile data2(data2path);
+    auto csvFileName = destDir.filePath(params.outFile); // a végeredmény
+    int csvLineCount = generateCsv(literalStrings, csvFileName);
+    zInfo("csvFileName: "+csvFileName+ " ("+QString::number(csvLineCount)+")");
+
+    zInfo(QStringLiteral("Work1 done"))
+    return 1;
+}
+
+
+void Work1::LiteralsToFile(const QList<Literal> &literals, const QString &fileName)
+{
+    QFile data2(fileName);
     data2.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream output(&data2);
 
     QString prev("");
     int n = 0;
 
-    foreach(auto s, literalStrings){
+    foreach(auto s, literals){
         if(s.relevant){
             if(s.fileName!=prev){
-                output<<"##############################"<<s.fileName<<"##############################"<<endl;
+                output<<"##############################"<<s.fileName<<"##############################"<<Qt::endl;
                 prev = s.fileName;
             }
-            output<<s.value<<endl;
+            output<<s.value<<Qt::endl;
             n++;
         }
     }
 
-    output<<endl<<endl<<"Talalt literalis sztringek szama: "<<n<<endl;
+    output<<Qt::endl<<Qt::endl<<"Talalt literalis sztringek szama: "<<n<<Qt::endl;
 
     data2.close();
-
-    auto csvFileName = destDir.filePath(params.outFile); // a végeredmény
-
-    int csvLineCount = generateCsv(literalStrings, csvFileName);
-
-    zInfo("csvFileName: "+csvFileName+ " ("+QString::number(csvLineCount)+")");
-
-
-    zInfo(QStringLiteral("Work1 done"))
-    return 1;
 }
 
 QStringList Work1::removeFiles(QStringList list, QStringList exc){
@@ -234,10 +235,10 @@ int Work1::generateCsv(const QList<Literal>& list, const QString& filename)
     else{
         QChar s('\t');
         QTextStream out(&f);
-        out<<"#filename"<<s<<"index"<<s<<"length"<<s<<"value"<<s<<"wordcode"<<endl;
+        out<<"#filename"<<s<<"index"<<s<<"length"<<s<<"value"<<s<<"wordcode"<<Qt::endl;
         foreach(auto l, list){
             if(l.relevant){
-                out<<l.fileName<<s<<l.index<<s<<l.length<<s<<l.value<<s<<l.wordCode<<endl;
+                out<<l.fileName<<s<<l.index<<s<<l.length<<s<<l.value<<s<<l.wordCode<<Qt::endl;
                 i++;
             }
         }
@@ -278,6 +279,8 @@ void Work1::addWCodes(QList<Literal> *list)
     }
 }
 
+
+
 QList<Exclusion> Work1::getSpecial(QStringList dest, const QString regex){
     QList<Exclusion> out;
     QRegularExpression reg(regex);
@@ -295,11 +298,13 @@ QList<Exclusion> Work1::getSpecial(QStringList dest, const QString regex){
                 e.fileName = d;
                 out<<e;
                 if(match.captured(2)!=nullptr)
+                {
                     e.value = match.captured(2);
                     e.index = match.capturedStart(2);
                     e.length = match.capturedLength(2);
                     e.fileName = d;
                     out<<e;
+                }
             }
         }
     }
@@ -570,4 +575,100 @@ QString Work1::append9(const QString &a, const QString &b)
     QString retVal = x + s + y;
 
     return retVal;
+}
+
+/**/
+
+QList<Literal> Work1::getLiterals2(const QStringList& inFileNames){
+    QList<Literal> out;
+    foreach(auto d, inFileNames){
+        auto l = getLiterals2(d);
+        out<<l;
+    }
+    return out;
+}
+
+QList<Literal> Work1::getLiterals2(const QString& inFileName){
+    QList<Literal> out;
+
+    QString txt(com::helper::FileHelper::load(inFileName));
+    int maxIx = txt.length()-1;
+
+    for(int i=0;i<txt.length();i++){
+        int ix1 = txt.indexOf('"');
+        if(ix1==-1) break;
+
+        QString l = getLiteral2(txt, ix1);
+    }
+    //int count = 1;
+    /*while(i.hasNext()){
+        Literal l;
+        QRegularExpressionMatch match = i.next();
+        if(match.hasMatch()){
+            if(match.captured(2).length() <= 1) continue;
+            l.value = match.captured(2);
+            l.fileName = inFileName;
+            l.index = match.capturedStart(2);
+            l.length = match.capturedLength(2);
+            l.relevant = true;
+
+            int lix1 = l.index; //end
+
+            int lix2 = l.index-20;
+            if(lix2<=0) lix2=0;
+            int len = lix1-lix2;
+
+
+            l.pref = fileText.mid(lix2, len);
+
+            lix2 = l.pref.lastIndexOf('\n');
+            if(lix2!=-1) l.pref = l.pref.mid(lix2,l.pref.length()-lix2);
+
+            lix1 = l.index+l.length;//start
+            lix2 = fileText.indexOf('\n');//lix1+20;//end
+            if(lix2==-1) lix2=lix1+20;
+            if(lix2>maxIx) lix2=maxIx;
+            len = lix2-lix1;
+
+            l.postf = fileText.mid(lix1,len);
+
+            lix2 = l.postf.indexOf('\n');
+            if(lix2!=-1) l.postf = l.postf.mid(0,lix2);
+
+            *output<<l.value<<Qt::endl;
+            out<<l;
+        }
+    }*/
+    return out;
+}
+
+QString Work1::getLiteral2(const QString &txt, int ix1)
+{
+    int preIx = ix1-1;
+    if(preIx>=0){
+        if(txt[preIx]=='@') return getRawString(txt,ix1);
+        if(txt[preIx]=='$') return getInterpolatedString(txt, ix1);
+    }
+    return getNormalString(txt,ix1);
+}
+
+QString Work1::getNormalString(const QString &txt, int ix1){
+    int ix2=ix1+1;
+    bool end=false;
+    do{
+        ix2 = txt.indexOf('"', ix2);
+        if(ix2==-1) break;
+        if(txt[ix2]=='\\') ix2++;
+        else end = true;
+    }while(!end);
+
+    return txt.mid(ix1, ix2-ix1);
+}
+
+QString Work1::getRawString(const QString &txt, int ix1){
+    return {};
+}
+
+QString Work1::getInterpolatedString(const QString &txt, int ix1){
+    return {};
 }

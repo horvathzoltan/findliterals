@@ -1,7 +1,7 @@
 #include <QCommandLineParser>
 #include <QCoreApplication>
 #include "common/logger/log.h"
-#include "appworker.h"
+//#include "appworker.h"
 #include "common/helper/signalhelper/signalhelper.h"
 #include "common/helper/CommandLineParserHelper/commandlineparserhelper.h"
 #include "common/coreappworker/coreappworker.h"
