@@ -101,9 +101,14 @@ Fájl sikeresen átmásolva: /home/zoli/forditas/tök/MasterMoveAnalyse_2/Master
 
 -i /home/zoli/forditas/tök/MasterMoveAnalyse_2/MasterMoveAnalyse.sln -o outfile.csv
 -i /home/zoli/forditas/tök/MasterGait/MasterMove/MasterMove.Program/MasterMove.Program.csproj -o outfile.csv
+
+//fordítás
 -i /home/zoli/forditas/tök/MasterGait/MasterMove/MasterMove.sln -o outfile.csv
+
+//irodai
 -i /home/zoli/forditas/console2/proba.cs -o outfile.csv
 
+//otthoni
 -i /home/zoli/findliterals/proba.cs -o outfile.csv
 
 

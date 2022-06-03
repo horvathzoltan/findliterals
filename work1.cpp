@@ -159,11 +159,15 @@ int Work1::doWork()
     //auto literalStrings = getLiterals(destFinal, COMORSTR, data1path);
     auto literalStrings = getLiterals2(destFinal);
 
+    QList<Literal> wcodes = GetWcodes(literalStrings);
+
     auto data1path = destDir.filePath("literals1.csv"); // az eredeti
-    zInfo("data1path: "+data1path+ " ("+QString::number(data1path.length())+")");
+    zInfo("data1path: "+data1path+ " ("+QString::number(literalStrings.length())+")");
     LiteralsToFile(literalStrings, data1path);
 
-    assertLiterals3(&literalStrings, excByText, AssertMode::ByLetter);
+    assertLiterals3(&literalStrings, {}, AssertMode::BySize);
+    assertLiterals3(&literalStrings, {}, AssertMode::ByLetterCount);
+    assertLiterals3(&literalStrings, {}, AssertMode::ByLetter);
     assertLiterals3(&literalStrings, excByText, AssertMode::ByValue);
     assertLiterals3(&literalStrings, excByPrefix, AssertMode::ByPrefix);
     assertLiterals3(&literalStrings, excByPostfix, AssertMode::ByPostfix);
@@ -171,7 +175,7 @@ int Work1::doWork()
     addWCodes(&literalStrings);
 
     auto data2path = destDir.filePath("literals2.csv"); // a szűrt
-    zInfo("data2path: "+data2path+ " ("+QString::number(data2path.length())+")");
+    zInfo("data2path: "+data2path+ " ("+QString::number(literalStrings.length())+")");
     LiteralsToFile(literalStrings, data2path);
 
     auto csvFileName = destDir.filePath(params.outFile); // a végeredmény
@@ -183,11 +187,20 @@ int Work1::doWork()
     int wcodesLineCount = WcodesToFile(literalStrings, wcodesFileName, {"hu-HU", "en-US", "de-DE"});
     zInfo("wcodesFileName: "+csvFileName+ " ("+QString::number(wcodesLineCount)+")");
 
+    auto wcodespath = destDir.filePath("used_wcodes.csv"); // a szűrt
+    zInfo("wcodespath: "+wcodespath+ " ("+QString::number(wcodes.length())+")");
+    LiteralsToFile(wcodes, wcodespath);
 
     zInfo(QStringLiteral("Work1 done"))
     return 1;
 }
 
+QList<Literal> Work1::GetWcodes(const QList<Literal> &literals)
+{
+    QList<Literal> r;
+    for(auto&l:literals) if(l.value.toLower().startsWith("wc_")) r<<l;
+    return r;
+}
 
 void Work1::LiteralsToFile(const QList<Literal> &literals, const QString &fileName)
 {
@@ -205,7 +218,7 @@ void Work1::LiteralsToFile(const QList<Literal> &literals, const QString &fileNa
                 output<<"##############################"<<s.fileName<<"##############################"<<Qt::endl;
                 prev = s.fileName;
             }
-            output<<QString(s.concatenate?"+":"")+'\"'+s.value+'\"'<<Qt::endl;
+            output<<QString::number(s.lineNumber)+":"+QString(s.concatenate?"+":"")+'\"'+s.value+'\"'<<Qt::endl;
             n++;
         }
     }
@@ -404,19 +417,29 @@ void Work1::assertLiterals3(QList<Literal> *list, QStringList exc, AssertMode mo
     zforeach(l, *list){
         QString txt;
         switch(mode){
+        case AssertMode::BySize: txt = l->value.toLower(); break;
+        case AssertMode::ByLetterCount: txt = l->value.toLower(); break;
         case AssertMode::ByLetter:
         case AssertMode::ByValue: txt = l->value.toLower(); break;
         case AssertMode::ByPrefix: txt = l->pref.toLower(); break;
         case AssertMode::ByPostfix: txt = l->postf.toLower(); break;
         default: txt = "";
         }
-        if(mode == AssertMode::ByLetter){
+        if(mode==AssertMode::BySize){
+            if(txt.size()<=1) l->relevant=false;
+        }
+        else if(mode==AssertMode::ByLetterCount){
+            int letters=0;
+            for(auto& a:txt) if(a.isLetter()) letters++;
+            if(letters<=1) l->relevant = false;
+        }
+        else if(mode == AssertMode::ByLetter){
             int i;
             for (i=0;i<txt.size();i++){
                 if(txt[i].isLetter()) break;
             }
             if(i==txt.size()) l->relevant=false;
-        } else{
+        } else {
 
             foreach(auto s, exc){
 
@@ -559,7 +582,7 @@ QList<Literal> Work1::getLiterals2(const QString& inFileName){
     QString txt(com::helper::FileHelper::load(inFileName));
     auto literals = getLiterals3(txt);
 
-    Literal* lastl;
+    Literal* lastl=nullptr;
     for(auto&l:literals)
     {
         if(!l.concatenate){
@@ -567,8 +590,10 @@ QList<Literal> Work1::getLiterals2(const QString& inFileName){
         }
         else
         {
-            lastl->value+=l.value;
-            l.relevant=false;
+            if(lastl){
+                lastl->value+=l.value;
+                l.relevant=false;
+            }
         }
         l.fileName = inFileName;
     }
@@ -578,75 +603,81 @@ QList<Literal> Work1::getLiterals2(const QString& inFileName){
 QList<Literal> Work1::getLiterals3(const QString& txt){
     QList<Literal> out;
 
-    bool concatenate = false;
+    int maxIx = txt.length()-1;
     int whitespaces = 0;
     int letters = 0;
     bool comment1 = false;
     bool comment2 = false;
+    int linenumber=1;
+    int csigns = 0;
     for(int i=0;i<txt.length();i++)
     {
 //        if(txt[i]=='+'){
 //            zInfo("upsz");
 //        }
         if(txt[i]!='"'){
-            if(txt[i].isSpace() || txt[i].isNonCharacter())
-            {
-                letters=0;
+            if(txt[i].isSpace() || txt[i].isNonCharacter()){
                 whitespaces++;
-            }
-            else
-            {
-                whitespaces=0;
+            } else if(txt[i]=='+'){
+                csigns++;
+            } else{
                 letters++;
-                if(concatenate)
-                    concatenate = false;
             }
 
-            if(txt[i]=="+"){
-                if(letters==1)
-                    concatenate = true;
-                continue;
-            }
-            else if(txt[i]=="/"){
-                if(txt[i+1]=="/"){
-                    if(!comment2)
-                    {
-                        comment1 = true;
-                        i+=2;
+            if(txt[i]=="/"){
+                int pix = i+1;
+                if(pix<=maxIx)
+                {
+                    if(txt[pix]=="/"){
+                        if(!comment2)
+                        {
+                            comment1 = true;
+                            i+=2;
+                        }
                     }
-                }
-                else if(txt[i+1]=="*"){
-                    if(!comment2){
-                        comment2 = true;
-                        i+=2;
+                    else if(txt[pix]=="*"){
+                        if(!comment2){
+                            comment2 = true;
+                            i+=2;
+                        }
                     }
                 }
                 continue;
             }
             else if(txt[i]=='\n')
             {
+                linenumber++;
                 if(comment1) comment1 = false;
                 continue;
             }
             else if(txt[i]=="*")
             {
-                if(txt[i+1]=='/')
+                int pix = i+1;
+                if(pix<=maxIx)
                 {
-                    if(comment2) comment2 = false;
+                    if(txt[i+1]=='/')
+                    {
+                        if(comment2) comment2 = false;
+                    }
+                    continue;
                 }
-                continue;
             }
             continue;
         }
-        letters = 0;
-        whitespaces = 0;
+
         /*eljutottunk a lényegig*/
         if(!comment1&&!comment2)
         {
-            Literal l = getLiteral2(txt, i);
+            Literal l = getLiteral2(txt, i);            
             if(l.isValid())
             {
+//                if(l.value.startsWith("1fefefefeí")){
+//                    zInfo("hutty");
+//                }
+                bool concatenate = (csigns==1 && letters==0);
+
                 l.concatenate = concatenate;
+                l.lineNumber = linenumber;
 
                 QString pref= getPrefix(txt, l, 20);
                 l.pref = pref.replace("\n", "\\n").replace("\t", "\\t");
@@ -664,9 +695,15 @@ QList<Literal> Work1::getLiterals3(const QString& txt){
                         out<<el;
                     }
                 }
-                if(l.indexEnd>0) i = l.indexEnd;
+                if(l.indexEnd>=0) i = l.indexEnd;
+            }
+            else{
+                i++;
             }
         }
+        letters = 0;
+        whitespaces = 0;
+        csigns = 0;
     }
     return out;
 }
@@ -684,24 +721,23 @@ Literal Work1::getLiteral2(const QString &txt, int ix1)
 Literal Work1::getNormalString(const QString &txt, int ix1){
     ix1++;
     int ix2=ix1;
+    int maxIx = txt.length()-1;
 
     for(int i=ix1;i<txt.length();i++){
-        if(txt[i]=='\"')
+        if(txt[i]=='\\')
         {
-            if(txt[i+1]=='\"')
-            {
-                i+=2;
-                continue;
-            }
-            else
-            {
-                ix2 = i;
-                break;
-            }
+            i++;
+            continue;
+        }
+        else if(txt[i]=='\"')
+        {
+            ix2 = i;
+            break;
         }
     }
 
     if(ix2==-1) return {};
+    if(ix1==ix2) return {};
 
     Literal l;
     l.value = txt.mid(ix1, ix2-ix1);
@@ -718,20 +754,25 @@ Literal Work1::getRawString(const QString &txt, int ix1){
     ix1++;
     int ix2=-1;
 
-    for(int i=ix1;i<txt.length();i++){
+    int maxIx = txt.length()-1;
+
+    for(int i=ix1;i<txt.length();i++){        
         if(txt[i]=='\"')
-        {
-            if(txt[i]=='\\')
-            {
-                i++;
-                continue;
+        {            
+            int pix = i+1;
+            if(pix<=maxIx){
+                if(txt[pix]=='\"')
+                {
+                    i+=2;
+                    continue;
+                }
+                else
+                {
+                    ix2 = i;
+                    break;
+                }
             }
-            if(txt[i+1]=='\"')
-            {
-                i+=2;
-                continue;
-            }
-            else
+            else // az utolsó karakter pont a záró idézőjel
             {
                 ix2 = i;
                 break;
@@ -740,6 +781,7 @@ Literal Work1::getRawString(const QString &txt, int ix1){
     }
 
     if(ix2==-1) return {};
+    if(ix1==ix2) return {};
 
     Literal l;
     l.value = txt.mid(ix1, ix2-ix1);
@@ -753,6 +795,7 @@ Literal Work1::getRawString(const QString &txt, int ix1){
 }
 
 Literal Work1::getInterpolatedString(const QString &txt, int ix1){    
+    int maxIx = txt.length()-1;
     ix1++;
     int ix2=-1;
     Literal l;
@@ -793,7 +836,7 @@ Literal Work1::getInterpolatedString(const QString &txt, int ix1){
     }
 
     if(ix2==-1) return {};
-
+    if(ix1==ix2) return {};
 
     l.value = txt.mid(ix1, ix2-ix1);
     l.index = ix1;

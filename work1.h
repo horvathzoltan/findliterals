@@ -19,6 +19,7 @@ struct Literal{
     enum Type {normal, raw, interpolated};
 
     QString fileName;
+    int lineNumber;
     int index=-1;
     int indexEnd=-1;
     int length;
@@ -92,7 +93,8 @@ private:
     static QList<Exclusion> getSpecial2(QStringList source, QString filename, const QString regexp);
     static void assertLiterals(QList<Literal> *list, QList<Exclusion> set, const QString regexp);
     static void assertLiterals2(QList<Literal> *list, QList<Exclusion> set);
-    enum AssertMode{ ByValue, ByPrefix, ByPostfix, ByLetter };
+
+    enum AssertMode{ ByValue, ByPrefix, ByPostfix, ByLetter, BySize, ByLetterCount };
     static void assertLiterals3(QList<Literal> *list, QStringList exc, AssertMode mode);
     static QStringList removeFiles(QStringList list, QStringList exc);
 
@@ -113,6 +115,7 @@ private:
 
     static QString getPrefix(const QString& txt, const Literal& l, int plen);
     static QString getPostfix(const QString& txt, const Literal& l, int plen);
+    static QList<Literal> GetWcodes(const QList<Literal> &literals);
 };
 
 
