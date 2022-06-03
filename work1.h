@@ -95,7 +95,10 @@ private:
     enum AssertMode{ ByValue, ByPrefix, ByPostfix, ByLetter };
     static void assertLiterals3(QList<Literal> *list, QStringList exc, AssertMode mode);
     static QStringList removeFiles(QStringList list, QStringList exc);
+
     static int generateCsv(const QList<Literal>&, const QString& filename);
+    static int WcodesToFile(const QList<Literal> &list, const QString &filename,  const QStringList& langCodes);
+
     static void addWCodes(QList<Literal> *list);
 
     static void LiteralsToFile(const QList<Literal>& literals, const QString& fileName);

@@ -178,6 +178,12 @@ int Work1::doWork()
     int csvLineCount = generateCsv(literalStrings, csvFileName);
     zInfo("csvFileName: "+csvFileName+ " ("+QString::number(csvLineCount)+")");
 
+
+    auto wcodesFileName = destDir.filePath("wcodes_"+params.outFile); // a végeredmény
+    int wcodesLineCount = WcodesToFile(literalStrings, wcodesFileName, {"hu-HU", "en-US", "de-DE"});
+    zInfo("wcodesFileName: "+csvFileName+ " ("+QString::number(wcodesLineCount)+")");
+
+
     zInfo(QStringLiteral("Work1 done"))
     return 1;
 }
@@ -240,6 +246,28 @@ int Work1::generateCsv(const QList<Literal>& list, const QString& filename)
         foreach(auto l, list){
             if(l.relevant){
                 out<<l.fileName<<s<<l.index<<s<<l.length<<s<<l.value<<s<<l.wordCode<<Qt::endl;
+                i++;
+            }
+        }
+        f.close();
+    }
+    return i;
+}
+
+int Work1::WcodesToFile(const QList<Literal>& list, const QString& filename, const QStringList& langCodes)
+{
+    QFile f(filename);
+    int i = 0;
+    if(!f.open(QIODevice::WriteOnly | QIODevice::Text)){
+        zInfo(QStringLiteral("Hiba az output fájl megnyitásakor!"))
+    }
+    else{
+        QChar s('\t');
+        QTextStream out(&f);
+        out<<"#wordCode"<<s<<"langCode"<<s<<"message"<<Qt::endl;
+        foreach(auto l, list){
+            if(l.relevant){
+                for(auto& lcode:langCodes) out<<l.wordCode<<s<<lcode<<s<<l.value<<Qt::endl;
                 i++;
             }
         }
