@@ -86,8 +86,6 @@ private:
     static QStringList appendString(const QStringList &in, const QString &ezt);
     static void copyDir(QStringList source, QStringList dest);
     static QString getProjFolderName(QString proja);
-    static QList<Literal> getLiterals(QStringList dest, const QString regexp, const QString& filename);
-    static QList<Literal> getLiterals(const QString inFileName, const QRegularExpression reg, QTextStream* output);
     //static void killComments(QStringList files);
     static void filterStrings(QList<Literal> *list, const QString regexp);
     static QList<Exclusion> getSpecial(QStringList source, const QString regexp);
@@ -99,6 +97,7 @@ private:
     static QStringList removeFiles(QStringList list, QStringList exc);
     static int generateCsv(const QList<Literal>&, const QString& filename);
     static void addWCodes(QList<Literal> *list);
+
     static void LiteralsToFile(const QList<Literal>& literals, const QString& fileName);
     static QList<Literal> getLiterals2(const QStringList& inFileNames);
     static QList<Literal> getLiterals2(const QString& inFileName);

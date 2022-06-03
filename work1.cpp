@@ -261,7 +261,7 @@ void Work1::addWCodes(QList<Literal> *list)
                 int i = 5;
                 QStringList token(l->fileName.split(QDir::separator()));
                 QString fn(token.at(token.length()-1));
-                QString wcfn(fn.left(i).toUpper());
+                QString wcfn("WC_"+fn.left(i).toUpper());
                 while(WCFNs.contains(wcfn)){
                     i++;
                     wcfn = fn.left(i).toUpper();
@@ -418,69 +418,7 @@ void Work1::assertLiterals3(QList<Literal> *list, QStringList exc, AssertMode mo
     }
 }
 
-//A getFileList, a killComments és ez kb ugyan azt csinálja, lehetne közös függvény
-QList<Literal> Work1::getLiterals(QStringList inFileNames, const QString regexp, const QString& outFileName){
-    QFile data(outFileName);
-    data.open(QIODevice::WriteOnly | QIODevice::Text);
-    QTextStream output(&data);
-    QList<Literal> out;
-    QRegularExpression reg(regexp);
-    foreach(auto d, inFileNames){
-        auto l = getLiterals(d, reg, &output);
-        out<<l;
-    }
-    data.close();
-    return out;
-}
 
-QList<Literal> Work1::getLiterals(const QString inFileName, const QRegularExpression reg, QTextStream* output){
-    QList<Literal> out;
-
-    QString fileText(com::helper::FileHelper::load(inFileName));
-    int maxIx = fileText.length()-1;
-    *output<<inFileName<<" tartalma:"<<Qt::endl;
-    QRegularExpressionMatchIterator i = reg.globalMatch(fileText);
-    //int count = 1;
-    while(i.hasNext()){
-        Literal l;
-        QRegularExpressionMatch match = i.next();
-        if(match.hasMatch()){
-            if(match.captured(2).length() <= 1) continue;
-            l.value = match.captured(2);
-            l.fileName = inFileName;
-            l.index = match.capturedStart(2);
-            l.length = match.capturedLength(2);
-            l.relevant = true;
-
-            int lix1 = l.index; //end
-
-            int lix2 = l.index-20;
-            if(lix2<=0) lix2=0;
-            int len = lix1-lix2;
-
-
-            l.pref = fileText.mid(lix2, len);
-
-            lix2 = l.pref.lastIndexOf('\n');
-            if(lix2!=-1) l.pref = l.pref.mid(lix2,l.pref.length()-lix2);
-
-            lix1 = l.index+l.length;//start
-            lix2 = fileText.indexOf('\n');//lix1+20;//end
-            if(lix2==-1) lix2=lix1+20;
-            if(lix2>maxIx) lix2=maxIx;
-            len = lix2-lix1;
-
-            l.postf = fileText.mid(lix1,len);
-
-            lix2 = l.postf.indexOf('\n');
-            if(lix2!=-1) l.postf = l.postf.mid(0,lix2);
-
-            *output<<l.value<<Qt::endl;
-            out<<l;
-        }
-    }
-    return out;
-}
 
 void Work1::filterStrings(QList<Literal> *list, const QString regexp)
 {
@@ -592,11 +530,20 @@ QList<Literal> Work1::getLiterals2(const QStringList& inFileNames){
 QList<Literal> Work1::getLiterals2(const QString& inFileName){
     QString txt(com::helper::FileHelper::load(inFileName));
     auto literals = getLiterals3(txt);
+
+    Literal* lastl;
     for(auto&l:literals)
     {
+        if(!l.concatenate){
+            lastl=&l;
+        }
+        else
+        {
+            lastl->value+=l.value;
+            l.relevant=false;
+        }
         l.fileName = inFileName;
     }
-
     return literals;
 }
 
@@ -674,10 +621,10 @@ QList<Literal> Work1::getLiterals3(const QString& txt){
                 l.concatenate = concatenate;
 
                 QString pref= getPrefix(txt, l, 20);
-                l.pref = pref;
+                l.pref = pref.replace("\n", "\\n").replace("\t", "\\t");
                 QString postf= getPostfix(txt, l, 20);
-                l.postf = postf;
-
+                l.postf = postf.replace("\n", "\\n").replace("\t", "\\t");
+                l.value = l.value.replace("\n", "\\n").replace("\t", "\\t");
                 out<<l;
                 if(l.indexEnd>0) i=l.indexEnd;
 
@@ -692,9 +639,7 @@ QList<Literal> Work1::getLiterals3(const QString& txt){
                 if(l.indexEnd>0) i = l.indexEnd;
             }
         }
-        //whitespaces = 0;
     }
-
     return out;
 }
 
