@@ -23,7 +23,7 @@ QTextStream& qStdOut()
 }
 //("([^"]|"").*")
 const QString Work1::SLN = R"(Project.*\"(.*.csproj)\")";
-const QString Work1::CSPROJ = R"(<Compile\s+Include\s*=\s*\"([^.]*\.cs)\")";
+const QString Work1::CSPROJ = R"(<Compile\s+Include\s*=\s*\"([^.]*(?:(?:\.cs)|(?:\.xaml\.cs)))\"|<Page\s+Include\s*=\s*\"([^.]*(?:\.xaml))\")";
 const QString Work1::COMORSTR = R"((\"([^"\\]*(?:\\.[^"\\]*)*)\"|\@\"((?:[^\"]|(?:\"\"))*)\")|([\s]*(?:\/\*([\s\S]*?)\*\/|\/\/(.*))))";
 const QString Work1::FILTER1 = R"(^[^\pL]+$)"; //a betűt nem tartalmazóak
 const QString Work1::FILTER2 = R"(^\s*select\s+\*)"; //a select * -gal kezdődőek
@@ -117,7 +117,7 @@ int Work1::doWork()
 
     zInfo("excludefilepath_txt: "+excludefilepath2+ " ("+QString::number(excByText.count())+")");
 
-    if(params.inFile.endsWith(".cs"))
+    if(params.inFile.endsWith(".cs") || params.inFile.endsWith(".xaml") || params.inFile.endsWith(".xaml.cs"))
     {
         QFileInfo fi(params.inFile);
         auto csprojparent = getParentDirName(params.inFile);
