@@ -51,7 +51,9 @@ public:
 private:
 
     static const QString SLN;
-    static const QString CSPROJ;
+    static const QString CSPROJ1;
+    static const QString CSPROJ2;
+    static const QString CSPROJ3;
     //static const QString STRLIT;
     //static const QString COMMENT;
     static const QString COMORSTR;

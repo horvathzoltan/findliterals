@@ -23,7 +23,9 @@ QTextStream& qStdOut()
 }
 //("([^"]|"").*")
 const QString Work1::SLN = R"(Project.*\"(.*.csproj)\")";
-const QString Work1::CSPROJ = R"(<Compile\s+Include\s*=\s*\"([^.]*(?:(?:\.cs)|(?:\.xaml\.cs)))\"|<Page\s+Include\s*=\s*\"([^.]*(?:\.xaml))\")";
+const QString Work1::CSPROJ1 = R"(<Compile\s+Include\s*=\s*\"([^.]*(?:\.cs))\")";
+const QString Work1::CSPROJ2 = R"(<Compile\s+Include\s*=\s*\"([^.]*(?:\.xaml.cs))\")";
+const QString Work1::CSPROJ3 = R"(<Page\s+Include\s*=\s*\"([^.]*(?:\.xaml))\")";
 const QString Work1::COMORSTR = R"((\"([^"\\]*(?:\\.[^"\\]*)*)\"|\@\"((?:[^\"]|(?:\"\"))*)\")|([\s]*(?:\/\*([\s\S]*?)\*\/|\/\/(.*))))";
 const QString Work1::FILTER1 = R"(^[^\pL]+$)"; //a betűt nem tartalmazóak
 const QString Work1::FILTER2 = R"(^\s*select\s+\*)"; //a select * -gal kezdődőek
@@ -135,7 +137,18 @@ int Work1::doWork()
     {
         auto projFilePath = appendString(projFileNames, slnparent);
         foreach(auto proj, projFilePath){
-            auto cslr = getFileList(proj, CSPROJ);
+            auto cslra_cs = getFileList(proj, CSPROJ1);
+            auto cslra_xamlcs = getFileList(proj, CSPROJ2);
+            auto cslra_xaml = getFileList(proj, CSPROJ3);
+
+            QStringList cslr;
+            cslr.append(cslra_cs);
+            cslr.append(cslra_xamlcs);
+            cslr.append(cslra_xaml);
+
+            zInfo("cslra_cs:"+QString::number(cslra_cs.count()));
+            zInfo("cslra_xamlcs:"+QString::number(cslra_xamlcs.count()));
+            zInfo("cslra_xaml:"+QString::number(cslra_xaml.count()));
 
             auto cslr2 = removeFiles(cslr, exc);
 
